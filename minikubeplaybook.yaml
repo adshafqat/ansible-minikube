@@ -79,8 +79,15 @@
     - debug:
        msg: "{{ result }}"  
 
-# Cluster information can also be retirved using kubernetes collection. This requires community.kubernete collection to be installed on the ansible controller. 
+# Cluster information can also be retirved using kubernetes collection. This requires community.kubernete collection to be installed on the ansible controller. This also requires Python OpenShift client to be installed on host machines
 # ansible-galaxy collection install community.kubernetes
+
+    - name: Install Python OpenShift Client
+      pip:  
+       name:
+         - openshift 
+       state: present
+
     - name: Get Cluster information
       community.kubernetes.k8s_info:
         kind: Pod
@@ -89,6 +96,4 @@
         msg: "{{ pod_list | json_query('resources[*].metadata.name')}}"
     - debug:
         msg: "{{ pod_list | json_query('resources[*].metadata.namespace')}}"       
-       
-       
        
