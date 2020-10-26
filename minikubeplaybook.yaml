@@ -1,0 +1,80 @@
+---
+- name: A playbook to install Minikube
+  hosts: all
+
+  vars:
+     ansible_become: true		
+
+  tasks:
+    - name: Creating a repository file for Kubernetes
+      file:
+       path: /etc/yum.repos.d/kubernetes.repo
+       
+       state: touch
+
+    - name: Adding repository details in Kubernetes repo file.
+      blockinfile:
+       path: /etc/yum.repos.d/kubernetes.repo
+       block: |
+        [kubernetes]
+        name=Kubernetes
+        baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+        enabled=1
+        gpgcheck=1
+        repo_gpgcheck=1
+        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+          https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+    - name: Install dependencies
+      package:  
+       name:
+         - epel-release 
+         - python38
+         - libvirt
+         - qemu-kvm
+         - virt-install
+         - virt-top
+         - libguestfs-tools
+         - kubectl
+       state: installed
+ 
+    - name: Start libvirtd 
+      service:
+        name: libvirtd
+        state: started
+ 
+    - name: Installing Docker and firewalld
+      shell: |
+        yum install firewalld -y
+        yum install -y yum-utils device-mapper-persistent-data lvm2
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        yum install docker-ce -y --nobest
+
+    - name: Start Docker 
+      service:
+        name: docker
+        state: started
+ 
+
+    - name: Install Minikube
+      shell: | 
+       curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+       chmod +x minikube-linux-amd64
+       mv minikube-linux-amd64 /usr/bin/minikube
+
+ 
+    - name: Start Minikube
+      command: minikube start --extra-config=kubeadm.ignore-preflight-errors=NumCPU --force --cpus 1
+      
+    - name: Check Minikube's status.
+      command: minikube status
+      register: minikube_status
+      changed_when: false
+      ignore_errors: true
+       
+    - name: Check Pods
+      command: kubectl get pods -A
+      register: result
+    
+    - debug:
+       msg: "{{ result }}"  
