@@ -78,3 +78,17 @@
     
     - debug:
        msg: "{{ result }}"  
+
+# Cluster information can also be retirved using kubernetes collection. This requires community.kubernete collection to be installed on the ansible controller. 
+# ansible-galaxy collection install community.kubernetes
+    - name: Get Cluster information
+      community.kubernetes.k8s_info:
+        kind: Pod
+      register: pod_list
+    - debug: 
+        msg: "{{ pod_list | json_query('resources[*].metadata.name')}}"
+    - debug:
+        msg: "{{ pod_list | json_query('resources[*].metadata.namespace')}}"       
+       
+       
+       
