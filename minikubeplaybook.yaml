@@ -9,7 +9,6 @@
     - name: Creating a repository file for Kubernetes
       file:
        path: /etc/yum.repos.d/kubernetes.repo
-       
        state: touch
 
     - name: Adding repository details in Kubernetes repo file.
